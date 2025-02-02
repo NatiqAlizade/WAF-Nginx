@@ -45,34 +45,41 @@ cd /root && mkdir nginx-backup
 
 cp /usr/local/nginx/conf/nginx.conf /root/nginx-backup/
 
-printf 'load_module modules/ngx_http_modsecurity_module.so;
-user  nginx;
-worker_processes  1;
-pid        /run/nginx.pid;
-events {
-    worker_connections  1024;
-}
-http {
-    include       mime.types;
-    default_type  application/octet-stream;
-    sendfile        on;
-    keepalive_timeout  65;
-    server {
-        listen       80;
-        server_name  nginx.example.com;
-        modsecurity  on;
-        modsecurity_rules_file  /usr/local/nginx/conf/modsecurity.conf;
-        access_log  /var/log/nginx/access_example.log;
-        error_log  /var/log/nginx/error_example.log;
-        location / {
-            root   html;
-            index  index.html index.htm;
-        }
-        error_page   500 502 503 504  /50x.html;
-        location = /50x.html {
-            root   html;
-        }                                                                                                                                                      
-}'>/usr/local/nginx/conf/nginx.conf
+printf "load_module modules/ngx_http_modsecurity_module.so;\n\
+user  nginx;\n\
+worker_processes  1;\n\
+pid        /run/nginx.pid;\n\
+\n\
+events {\n\
+    worker_connections  1024;\n\
+}\n\
+\n\
+http {\n\
+    include       mime.types;\n\
+    default_type  application/octet-stream;\n\
+    sendfile        on;\n\
+    keepalive_timeout  65;\n\
+\n\
+    server {\n\
+        listen       80;\n\
+        server_name  nginx.example.com;\n\
+        modsecurity  on;\n\
+        modsecurity_rules_file  /usr/local/nginx/conf/modsecurity.conf;\n\
+        access_log  /var/log/nginx/access_example.log;\n\
+        error_log  /var/log/nginx/error_example.log;\n\
+\n\
+        location / {\n\
+            root   html;\n\
+            index  index.html index.htm;\n\
+        }\n\
+\n\
+        error_page   500 502 503 504  /50x.html;\n\
+        location = /50x.html {\n\
+            root   html;\n\
+        }\n\
+    }\n\
+}\n" | sudo tee /usr/local/nginx/conf/nginx.conf > /dev/null
+
 
 sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /usr/local/nginx/conf/modsecurity.conf
 
