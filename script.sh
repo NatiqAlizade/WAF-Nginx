@@ -1,11 +1,10 @@
 #!/bin/bash
 
-apt update -y
-
-apt upgrade -y
-
+#Prerequisites
+apt update -y && apt upgrade -y
 apt install g++ flex bison curl apache2-dev doxygen libyajl-dev ssdeep liblua5.2-dev libgeoip-dev libtool dh-autoreconf libcurl4-gnutls-dev libxml2 libpcre++-dev libxml2-dev git liblmdb-dev libpkgconf3 lmdb-doc pkgconf zlib1g-dev libssl-dev -y
 
+#Install ModSecurity
 mkdir /root/Modsecurity && cd /root/Modsecurity
 
 wget https://github.com/SpiderLabs/ModSecurity/releases/download/v3.0.8/modsecurity-v3.0.8.tar.gz
@@ -19,6 +18,7 @@ cd modsecurity-v3.0.8
 make
 make install
 
+#Nginx install
 mkdir /root/Nginx && cd /root/Nginx
 git clone https://github.com/SpiderLabs/ModSecurity-nginx.git
 
@@ -37,6 +37,7 @@ make install
 ln -s /usr/local/nginx/sbin/nginx /usr/local/sbin/
 nginx -V
 
+#Configure Nginx with ModSecurity
 cp /root/Modsecurity/modsecurity-v3.0.8/modsecurity.conf-recommended /usr/local/nginx/conf/modsecurity.conf
 
 cp /root/Modsecurity/modsecurity-v3.0.8/unicode.mapping /usr/local/nginx/conf/
@@ -83,12 +84,16 @@ http {\n\
 
 sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /usr/local/nginx/conf/modsecurity.conf
 
+
+#Install ModSecurity Core Rule Set
 git clone https://github.com/SpiderLabs/owasp-modsecurity-crs.git /usr/local/nginx/conf/owasp-crs
 
 cd /usr/local/nginx/conf/owasp-crs
 cp /usr/local/nginx/conf/owasp-crs/crs-setup.conf{.example,}
 cd .. && echo -e "Include owasp-crs/crs-setup.conf
 Include owasp-crs/rules/*.conf" >> /usr/local/nginx/conf/modsecurity.conf
+
+#Nginx start service
 configuration="[Unit]
 Description=A high performance web server and a reverse proxy server
 Documentation=man:nginx(8)
@@ -114,5 +119,6 @@ systemctl daemon-reload
 systemctl start nginx
 systemctl enable nginx
 
+#Verify ModSecurity
 curl localhost?doc=/bin/ls
 tail /var/log/modsec_audit.log
